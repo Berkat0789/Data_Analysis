@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from pandas_datareader import data as web
+import statsmodels.api as sm
+from scipy import stats
 
 class Firm():
 	"""
@@ -12,27 +14,55 @@ class Firm():
 		self.start = start
 		self.end = end
 		self.data_type = data_type
+		self.data_frame = pd.DataFrame()
 		self.daily_changes = pd.DataFrame()
 		self.daily_returns = pd.DataFrame()
+
 	def fetch_Data(self):
-		data_frame = pd.DataFrame()
+		self.data_frame = pd.DataFrame()
 		for t in self.tickers:
-			data_frame[t] = web.DataReader(t, "yahoo", start = self.start, end = self.end)[self.data_type]
-		return [data_frame.head(), data_frame.plot(figsize = (16,6))]
-	def dailyChanges(self):
-		data_frame = pd.DataFrame()
+			self.data_frame[t] = web.DataReader(t, "yahoo", start = self.start, end = self.end)[self.data_type]
+		return [self.data_frame.head(), self.data_frame.plot(figsize = (16,6))]
+
+
+	def dailyChanges(self, plottype = "line"):
 		self.daily_changes = pd.DataFrame()
 		for t in self.tickers:
-			data_frame[t] = web.DataReader(t, "yahoo", start = self.start, end = self.end)["Adj Close"]
-			self.daily_changes[t] = data_frame[t].pct_change()
-		return [self.daily_changes.tail(), self.daily_changes.plot(figsize = (16,6))]
-	def dailyRetuns(self):
+			self.data_frame[t] = web.DataReader(t, "yahoo", start = self.start, end = self.end)["Adj Close"]
+			self.daily_changes[t] = self.data_frame[t].pct_change()
+		return [self.daily_changes.tail(), self.daily_changes.plot(kind = f"{plottype}",figsize = (16,6))]
+
+	def dailyReturns(self, plottype = "line"):
 		data_frame = pd.DataFrame()
 		self.daily_returns = pd.DataFrame()
 		for t in self.tickers:
-			data_frame[t] = web.DataReader(t, "yahoo", start = self.start, end = self.end)["Adj Close"]
+			self.data_frame[t] = web.DataReader(t, "yahoo", start = self.start, end = self.end)["Adj Close"]
 			self.daily_returns[t] = (1 + self.daily_changes[t]).cumprod()
-		return [self.daily_returns.tail(), self.daily_returns.plot(figsize = (16,6))]
+		return [self.daily_returns.tail(), self.daily_returns.plot(kind = f"{plottype}",figsize = (16,6))]
+
+	def compare2(self, x_stock1, y_stock2):
+		self.daily_returns.dropna(inplace = True)
+		x_constant = sm.add_constant(self.data_frame[x_stock1])
+		model = sm.OLS(self.data_frame[y_stock2],x_constant).fit()
+		results = stats.linregress(self.data_frame[x_stock1], self.data_frame[y_stock2])
+		return model.summary2(), self.data_frame.plot(kind = "scatter", x = x_stock1, y = y_stock2, figsize = (16,6), alpha = 0.4), results
+	def plot_4_plots(self):
+		self.fetch_Data()
+		fig, axes = plt.subplots(2,2, figsize = (16,10))
+		axes[0,0].plot(self.data_frame[self.tickers[0]], label = f"{self.tickers[0]}")
+		axes[0,0].set_xlabel(f"{self.tickers[0]}")
+		axes[0,1].plot(self.data_frame[self.tickers[1]], label = f"{self.tickers[1]}")
+		axes[0,1].set_xlabel(f"{self.tickers[1]}")
+		axes[1,0].plot(self.data_frame[self.tickers[2]],label = f"{self.tickers[2]}")
+		axes[1,0].set_xlabel(f"{self.tickers[2]}")
+		axes[1,1].plot(self.data_frame[self.tickers[3]], label = f"{self.tickers[3]}")
+		axes[1,1].set_xlabel(f"{self.tickers[3]}")
+		plt.legend()
+		return fig
+
+
+
+
 
 
 
