@@ -46,18 +46,12 @@ class Firm():
 		model = sm.OLS(self.data_frame[y_stock2],x_constant).fit()
 		results = stats.linregress(self.data_frame[x_stock1], self.data_frame[y_stock2])
 		return model.summary2(), self.data_frame.plot(kind = "scatter", x = x_stock1, y = y_stock2, figsize = (16,6), alpha = 0.4), results
-	def plot_4_plots(self):
-		self.fetch_Data()
-		fig, axes = plt.subplots(2,2, figsize = (16,10))
-		axes[0,0].plot(self.data_frame[self.tickers[0]], label = f"{self.tickers[0]}")
-		axes[0,0].set_xlabel(f"{self.tickers[0]}")
-		axes[0,1].plot(self.data_frame[self.tickers[1]], label = f"{self.tickers[1]}")
-		axes[0,1].set_xlabel(f"{self.tickers[1]}")
-		axes[1,0].plot(self.data_frame[self.tickers[2]],label = f"{self.tickers[2]}")
-		axes[1,0].set_xlabel(f"{self.tickers[2]}")
-		axes[1,1].plot(self.data_frame[self.tickers[3]], label = f"{self.tickers[3]}")
-		axes[1,1].set_xlabel(f"{self.tickers[3]}")
-		plt.legend()
+	def plot_graphs(self):
+		fig, axes = plt.subplots(len(self.tickers), figsize = (16,10))
+		for index, securt in enumerate(self.tickers):
+			axes[index].plot(self.data_frame[securt])
+			axes[index].set_xlabel(f"{self.tickers[index]}")
+			print(f"here is the length {len(self.tickers)}")
 		return fig
 
 
